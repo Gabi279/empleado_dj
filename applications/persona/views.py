@@ -9,17 +9,30 @@ from django.views.generic import (
     DetailView,
     CreateView,
     TemplateView,
+    UpdateView,
+    DeleteView
     )
 
 from applications.departamento.models import Departamento 
 
 from .models import Empleado
 
+class InicioView(TemplateView):
+    """ vista que cargue la pagina de inicio """
+    template_name = 'inicio.html'
+
 class ListAllEmpleados(ListView):
     template_name = 'persona/list_all.html'
     paginate_by = 4
     ordering = 'first_name'
-    model = Empleado
+    context_object_name = 'empleados'
+        
+    def get_queryset(self):
+        palabra_clave = self.request.GET.get('kword', '')
+        lista = Empleado.objects.filter(
+            full_name__icontains=palabra_clave
+        )
+        return lista
 
 class ListByAreaEmpleado(ListView):
     template_name = 'persona/list_by_area.html'
@@ -79,4 +92,40 @@ class EmpleadoCreateView(CreateView):
     success_url = reverse_lazy('persona_app:correcto')
     
     def form_valid(self, form):
+        empleado = form.save(commit=False)
+        empleado.full_name = empleado.first_name + ' ' + empleado.last_name
+        empleado.save()
         return super(EmpleadoCreateView, self).form_valid(form)
+   
+    
+class EmpleadoUpdateView(UpdateView):
+    template_name = "persona/update.html"
+    model = Empleado
+    fields = [
+        'first_name',
+        'last_name',
+        'job',
+        'departamento',
+        'habilidades',
+    ]
+    success_url = reverse_lazy('persona_app:correcto')
+    
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        print('***************METODO POST**********************')
+        print('=======================')
+        print(request.POST)
+        print(request.POST['last_name'])
+        return super().post(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        print('***************METODO form valid**********************')
+        print('********************************')
+        return super(EmpleadoUpdateView , self).form_valid(form)
+    
+
+class EmpleadoDeleteView(DeleteView):
+    template_name = "persona/delete.html"
+    model = Empleado
+
+    success_url = reverse_lazy('persona_app:correcto')

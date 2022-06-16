@@ -1,3 +1,7 @@
 <h1>probando createview</h1>
 
-{{form}}
+<form method="post">{% csrf_token %}
+    {{form.as_p}}
+    <button type="submit">Guardar</button>
+</form>
+
