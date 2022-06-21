@@ -16,6 +16,7 @@ from django.views.generic import (
 from applications.departamento.models import Departamento 
 
 from .models import Empleado
+from .forms import EmpleadoForm
 
 class InicioView(TemplateView):
     """ vista que cargue la pagina de inicio """
@@ -33,14 +34,21 @@ class ListAllEmpleados(ListView):
             full_name__icontains=palabra_clave
         )
         return lista
-
+    
+class ListaEmpleadosAdmin(ListView):
+    template_name = 'persona/lista_empleados.html'
+    paginate_by = 10
+    ordering = 'first_name'
+    context_object_name = 'empleados'
+    model = Empleado
 class ListByAreaEmpleado(ListView):
     template_name = 'persona/list_by_area.html'
+    context_object_name = 'empleados'
     
     def get_queryset(self):
         area = self.kwargs['shorname']
         lista = Empleado.objects.filter(
-            departamento__shor_name = area
+            departamento__shor_name=area
         )
         return lista
     
@@ -82,14 +90,8 @@ class SuccessView(TemplateView):
 class EmpleadoCreateView(CreateView):
     template_name = 'persona/add.html'
     model = Empleado
-    fields = [
-        'first_name',
-        'last_name',
-        'job',
-        'departamento',
-        'habilidades',
-    ]
-    success_url = reverse_lazy('persona_app:correcto')
+    form_class = EmpleadoForm
+    success_url = reverse_lazy('persona_app:empleados_admin')
     
     def form_valid(self, form):
         empleado = form.save(commit=False)
@@ -108,7 +110,7 @@ class EmpleadoUpdateView(UpdateView):
         'departamento',
         'habilidades',
     ]
-    success_url = reverse_lazy('persona_app:correcto')
+    success_url = reverse_lazy('persona_app:empleados_admin')
     
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -128,4 +130,4 @@ class EmpleadoDeleteView(DeleteView):
     template_name = "persona/delete.html"
     model = Empleado
 
-    success_url = reverse_lazy('persona_app:correcto')
+    success_url = reverse_lazy('persona_app:empleados_admin')
